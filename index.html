@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Encoder/Decoder</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            flex: 1;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .output {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+            white-space: pre-wrap; /* Preserve whitespace and wrap text */
+            word-wrap: break-word; /* Break long words */
+            position: relative; /* Position for the copy button */
+            min-height: 50px; /* Ensure there's always space for the button */
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .copy-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>String Encoder/Decoder</h1>
+        <textarea id="inputText" placeholder="Enter your string here..."></textarea>
+        <div class="buttons">
+            <button onclick="processText('base64encode')">Base64 Encode</button>
+            <button onclick="processText('base64decode')">Base64 Decode</button>
+            <button onclick="processText('base64urlencode')">Base64Url Encode</button>
+            <button onclick="processText('base64urldecode')">Base64Url Decode</button>
+            <button onclick="processText('urlencode')">URL Encode</button>
+            <button onclick="processText('urldecode')">URL Decode</button>
+            <button onclick="processText('hexencode')">Hex Encode</button>
+            <button onclick="processText('hexdecode')">Hex Decode</button>
+            <button onclick="processText('jsonpretty')">JSON Pretty Print</button>
+        </div>
+        <div class="output" id="outputText">
+            <button class="copy-btn" onclick="copyToClipboard()">Copy</button>
+            <div id="outputContent"></div>
+        </div>
+    </div>
+    <script>
+        function processText(operation) {
+            const inputText = document.getElementById('inputText').value;
+            let outputText = '';
+
+            switch(operation) {
+                case 'base64encode':
+                    outputText = btoa(inputText);
+                    break;
+                case 'base64decode':
+                    try {
+                        outputText = atob(inputText);
+                    } catch(e) {
+                        outputText = 'Invalid Base64 string';
+                    }
+                    break;
+                case 'base64urlencode':
+                    outputText = btoa(inputText).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                    break;
+                case 'base64urldecode':
+                    try {
+                        let base64 = inputText.replace(/-/g, '+').replace(/_/g, '/');
+                        outputText = atob(base64);
+                    } catch(e) {
+                        outputText = 'Invalid Base64Url string';
+                    }
+                    break;
+                case 'urlencode':
+                    outputText = encodeURIComponent(inputText);
+                    break;
+                case 'urldecode':
+                    outputText = decodeURIComponent(inputText);
+                    break;
+                case 'hexencode':
+                    outputText = Array.from(inputText).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+                    break;
+                case 'hexdecode':
+                    outputText = inputText.match(/.{1,2}/g).map(byte => String.fromCharCode(parseInt(byte, 16))).join('');
+                    break;
+                case 'jsonpretty':
+                    try {
+                        outputText = JSON.stringify(JSON.parse(inputText), null, 4);
+                    } catch(e) {
+                        outputText = 'Invalid JSON string';
+                    }
+                    break;
+                default:
+                    outputText = 'Invalid Operation';
+            }
+
+            document.getElementById('outputContent').textContent = outputText;
+        }
+
+        function copyToClipboard() {
+            const outputText = document.getElementById('outputContent').textContent;
+            navigator.clipboard.writeText(outputText).then(() => {
+                alert('Copied to clipboard!');
+            }, () => {
+                alert('Failed to copy to clipboard.');
+            });
+        }
+    </script>
+</body>
+</html>
