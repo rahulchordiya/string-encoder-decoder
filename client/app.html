@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Encoder/Decoder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        textarea {
+            width: 100%;
+            box-sizing: border-box;
+            height: 150px;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            flex: 1;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .output {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+            white-space: pre-wrap; /* Preserve whitespace and wrap text */
+            word-wrap: break-word; /* Break long words */
+            position: relative; /* Position for the copy button */
+            min-height: 50px; /* Ensure there's always space for the button */
+        }
+        #outputContent {
+            padding-top: 30px; /* Add padding to the top to make space for the copy button */
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .copy-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .jwt-decoder {
+            margin-top: 20px;
+        }
+
+        .jwt-section {
+            margin-bottom: 15px;
+        }
+
+        .jwt-section h3 {
+            color: #333;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+
+        .jwt-section pre {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <script type="text/babel">
+        const { useState } = React;
+
+        function Header() {
+          return <h1>String Encoder/Decoder</h1>;
+        }
+
+        function InputArea({ inputText, setInputText }) {
+          return (
+            <textarea
+              id="inputText"
+              placeholder="Enter your string here..."
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+            ></textarea>
+          );
+        }
+
+        function ButtonPanel({ processText }) {
+          const buttons = [
+            { label: 'Base64 Encode', operation: 'base64encode' },
+            { label: 'Base64 Decode', operation: 'base64decode' },
+            { label: 'Base64Url Encode', operation: 'base64urlencode' },
+            { label: 'Base64Url Decode', operation: 'base64urldecode' },
+            { label: 'URL Encode', operation: 'urlencode' },
+            { label: 'URL Decode', operation: 'urldecode' },
+            { label: 'Hex Encode', operation: 'hexencode' },
+            { label: 'Hex Decode', operation: 'hexdecode' },
+            { label: 'JSON Pretty Print', operation: 'jsonpretty' },
+            { label: 'JWT Decode', operation: 'jwtdecode' },
+          ];
+
+          return (
+            <div className="buttons">
+              {buttons.map(({ label, operation }) => (
+                <button key={operation} onClick={() => processText(operation)}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          );
+        }
+
+        function OutputArea({ outputText, copyToClipboard }) {
+          return (
+            <div className="output" id="outputText">
+              <button className="copy-btn" onClick={copyToClipboard}>Copy</button>
+              <div id="outputContent">{outputText}</div>
+            </div>
+          );
+        }
+
+        function JwtDecoder({ header, payload }) {
+          return (
+            <div className="jwt-decoder">
+              <h2>Decoded JWT</h2>
+              <div className="jwt-section">
+                <h3>Header</h3>
+                <pre>{JSON.stringify(header, null, 2)}</pre>
+              </div>
+              <div className="jwt-section">
+                <h3>Payload</h3>
+                <pre>{JSON.stringify(payload, null, 2)}</pre>
+              </div>
+            </div>
+          );
+        }
+
+        function App() {
+          const [inputText, setInputText] = useState('');
+          const [outputText, setOutputText] = useState('');
+          const [activeTool, setActiveTool] = useState('string');
+          const [jwtHeader, setJwtHeader] = useState(null);
+          const [jwtPayload, setJwtPayload] = useState(null);
+
+          function base64UrlDecode(str) {
+            let base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+            let pad = base64.length % 4;
+            if (pad) {
+              if (pad === 2) base64 += '==';
+              else if (pad === 3) base64 += '=';
+            }
+            return atob(base64);
+          }
+
+          function processText(operation) {
+            setOutputText(''); // Clear previous output
+            if (operation !== 'jwtdecode') {
+                setActiveTool('string');
+            }
+
+            let output = '';
+
+            switch(operation) {
+              case 'base64encode':
+                output = btoa(inputText);
+                break;
+              case 'base64decode':
+                try {
+                  output = atob(inputText);
+                } catch(e) {
+                  output = 'Invalid Base64 string';
+                }
+                break;
+              case 'base64urlencode':
+                output = btoa(inputText).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+                break;
+              case 'base64urldecode':
+                try {
+                  output = base64UrlDecode(inputText);
+                } catch(e) {
+                  output = 'Invalid Base64Url string';
+                }
+                break;
+              case 'urlencode':
+                output = encodeURIComponent(inputText);
+                break;
+              case 'urldecode':
+                output = decodeURIComponent(inputText);
+                break;
+              case 'hexencode':
+                output = Array.from(inputText).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+                break;
+              case 'hexdecode':
+                try {
+                    output = inputText.match(/.{1,2}/g).map(byte => String.fromCharCode(parseInt(byte, 16))).join('');
+                } catch(e) {
+                    output = 'Invalid Hex string';
+                }
+                break;
+              case 'jsonpretty':
+                try {
+                  output = JSON.stringify(JSON.parse(inputText), null, 4);
+                } catch(e) {
+                  output = 'Invalid JSON string';
+                }
+                break;
+              case 'jwtdecode':
+                try {
+                  const [header, payload] = inputText.split('.');
+                  const decodedHeader = JSON.parse(base64UrlDecode(header));
+                  const decodedPayload = JSON.parse(base64UrlDecode(payload));
+                  setJwtHeader(decodedHeader);
+                  setJwtPayload(decodedPayload);
+                  setActiveTool('jwt');
+                } catch (e) {
+                  setActiveTool('string');
+                  output = 'Invalid JWT string';
+                }
+                break;
+              default:
+                output = 'Invalid Operation';
+            }
+            if (activeTool === 'string') {
+              setOutputText(output);
+            }
+          }
+
+          function copyToClipboard() {
+            navigator.clipboard.writeText(outputText).then(() => {
+              alert('Copied to clipboard!');
+            }, () => {
+              alert('Failed to copy to clipboard.');
+            });
+          }
+
+          return (
+            <div className="container">
+              <Header />
+              <InputArea inputText={inputText} setInputText={setInputText} />
+              <ButtonPanel processText={processText} />
+              {activeTool === 'string' ? (
+                <OutputArea outputText={outputText} copyToClipboard={copyToClipboard} />
+              ) : (
+                <JwtDecoder header={jwtHeader} payload={jwtPayload} />
+              )}
+            </div>
+          );
+        }
+
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+    </script>
+</body>
+</html>
