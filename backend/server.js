@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -9,12 +8,14 @@ const port = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from the client directory
-app.use(express.static(path.join(__dirname, '../client')));
+// Root route
+app.get('/', (req, res) => {
+    res.send('Welcome to the String Utilities API!');
+});
 
-// Handles any requests that don't match the ones above
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, '../client', 'app.html'));
+// A sample API endpoint
+app.get('/api/status', (req, res) => {
+    res.json({ status: 'ok' });
 });
 
 app.listen(port, () => {
